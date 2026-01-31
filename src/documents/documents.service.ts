@@ -3,12 +3,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { DocumentFile } from './document.schema';
 import { MinioService } from './minio.service';
+import { AiService } from './ai.service';
 
 @Injectable()
 export class DocumentsService {
     constructor(
         @InjectModel(DocumentFile.name) private documentModel: Model<DocumentFile>,
         private minioService: MinioService,
+        private aiService: AiService,
     ) { }
 
     async uploadDocument(file: Express.Multer.File, userId: string) {
@@ -22,9 +24,35 @@ export class DocumentsService {
             minioPath,
             uploadedBy: userId,
             uploadDate: new Date(),
+            analysisStatus: 'pending',
         });
 
+        this.analyzeDocumentAsync(document._id.toString(), file.buffer);
+
         return document;
+    }
+
+    private async analyzeDocumentAsync(documentId: string, fileBuffer: Buffer) {
+        try {
+            const analysis = await this.aiService.analyzeDocument(fileBuffer);
+
+            await this.documentModel.findByIdAndUpdate(documentId, {
+                extractedData: {
+                    firstName: analysis.firstName,
+                    lastName: analysis.lastName,
+                    cin: analysis.cin,
+                    department: analysis.department,
+                    documentType: analysis.documentType,
+                },
+                signatureDetected: analysis.signatureDetected,
+                analysisStatus: 'completed',
+            });
+        } catch (error) {
+            await this.documentModel.findByIdAndUpdate(documentId, {
+                analysisStatus: 'failed',
+                analysisError: error.message,
+            });
+        }
     }
 
     async findAll() {
