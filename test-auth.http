@@ -22,7 +22,7 @@ Content-Type: application/json
 
 ###
 
-### Test User Login
+### Test User Login - Admin
 POST http://localhost:3000/auth/login
 Content-Type: application/json
 
@@ -41,3 +41,49 @@ Content-Type: application/json
   "email": "manager@digiarch.com",
   "password": "Manager123!"
 }
+
+###
+
+### Get All Users (Admin Only)
+GET http://localhost:3000/users
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+###
+
+### Get User By ID (Admin Only)
+GET http://localhost:3000/users/USER_ID_HERE
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+###
+
+### Update User (Admin Only)
+PUT http://localhost:3000/users/USER_ID_HERE
+Content-Type: application/json
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+{
+  "role": "archive_manager"
+}
+
+###
+
+### Update User Password (Admin Only)
+PUT http://localhost:3000/users/USER_ID_HERE
+Content-Type: application/json
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+{
+  "password": "NewPassword123!"
+}
+
+###
+
+### Delete User (Admin Only)
+DELETE http://localhost:3000/users/USER_ID_HERE
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+###
+
+### Test Access Control - Try to access as Archive Manager (Should Fail)
+GET http://localhost:3000/users
+Authorization: Bearer YOUR_MANAGER_TOKEN_HERE
