@@ -59,4 +59,16 @@ export class MinioService implements OnModuleInit {
     async getFileUrl(objectName: string): Promise<string> {
         return await this.minioClient.presignedGetObject(this.bucketName, objectName, 24 * 60 * 60);
     }
+
+    async copyFile(sourcePath: string, destPath: string): Promise<void> {
+        const conds = new Minio.CopyConditions();
+        await this.minioClient.copyObject(this.bucketName, destPath, `/${this.bucketName}/${sourcePath}`, conds);
+    }
+
+    async moveFile(sourcePath: string, destPath: string): Promise<void> {
+        if (sourcePath === destPath) return;
+        await this.copyFile(sourcePath, destPath);
+        await this.deleteFile(sourcePath);
+    }
 }
+

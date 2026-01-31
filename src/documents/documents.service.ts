@@ -36,7 +36,7 @@ export class DocumentsService {
         try {
             const analysis = await this.aiService.analyzeDocument(fileBuffer);
 
-            await this.documentModel.findByIdAndUpdate(documentId, {
+            const document = await this.documentModel.findByIdAndUpdate(documentId, {
                 extractedData: {
                     firstName: analysis.firstName,
                     lastName: analysis.lastName,
@@ -46,13 +46,60 @@ export class DocumentsService {
                 },
                 signatureDetected: analysis.signatureDetected,
                 analysisStatus: 'completed',
-            });
+            }, { new: true });
+
+            if (document) {
+                await this.structureDocument(document);
+            }
+
         } catch (error) {
+            console.error('Analysis/Structuring Error:', error);
             await this.documentModel.findByIdAndUpdate(documentId, {
                 analysisStatus: 'failed',
                 analysisError: error.message,
             });
         }
+    }
+
+    private async structureDocument(document: DocumentFile) {
+        if (!document.extractedData) return;
+
+        const { firstName, lastName, cin, department, documentType } = document.extractedData;
+
+        // 1. Generate User Folder Name
+        let userFolder = 'Unknown_User';
+        if (lastName && firstName) {
+            const safeLastName = this.sanitizeString(lastName);
+            const safeFirstName = this.sanitizeString(firstName);
+            if (cin) {
+                userFolder = `${safeLastName}_${safeFirstName}_${this.sanitizeString(cin)}`;
+            } else {
+                userFolder = `${safeLastName}_${safeFirstName}_no-cin`;
+            }
+        }
+
+        // 2. Generate Subfolders
+        const safeDepartment = department ? this.sanitizeString(department) : 'General';
+        const safeDocType = documentType ? this.sanitizeString(documentType) : 'Uncategorized';
+
+        // 3. Construct New Path
+        const newFilename = `${this.sanitizeString(document.originalName)}`;
+        const newPath = `${userFolder}/${safeDepartment}/${safeDocType}/${newFilename}`;
+
+        // 4. Move File in MinIO
+        try {
+            await this.minioService.moveFile(document.minioPath, newPath);
+
+            // 5. Update Database
+            document.minioPath = newPath;
+            await document.save();
+        } catch (error) {
+            console.error(`Failed to move file from ${document.minioPath} to ${newPath}:`, error);
+        }
+    }
+
+    private sanitizeString(str: string): string {
+        return str.replace(/[^a-zA-Z0-9-_]/g, '_');
     }
 
     async findAll() {
