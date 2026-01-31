@@ -66,31 +66,39 @@ export class DocumentsService {
 
         const { firstName, lastName, cin, department, documentType } = document.extractedData;
 
-        // 1. Generate User Folder Name
-        let userFolder = 'Unknown_User';
-        if (lastName && firstName) {
-            const safeLastName = this.sanitizeString(lastName);
-            const safeFirstName = this.sanitizeString(firstName);
-            if (cin) {
-                userFolder = `${safeLastName}_${safeFirstName}_${this.sanitizeString(cin)}`;
-            } else {
-                userFolder = `${safeLastName}_${safeFirstName}_no-cin`;
-            }
-        }
-
-        // 2. Generate Subfolders
+        let newPath = '';
         const safeDepartment = department ? this.sanitizeString(department) : 'General';
         const safeDocType = documentType ? this.sanitizeString(documentType) : 'Uncategorized';
 
-        // 3. Construct New Path
-        const newFilename = `${this.sanitizeString(document.originalName)}`;
-        const newPath = `${userFolder}/${safeDepartment}/${safeDocType}/${newFilename}`;
+        if (cin) {
+            // SCENARIO A: CIN Present (Standard Structure)
+            // Format: LastName_FirstName_CIN/Department/Type/Filename
+            const safeLastName = lastName ? this.sanitizeString(lastName) : 'Unknown';
+            const safeFirstName = firstName ? this.sanitizeString(firstName) : 'User';
+            const safeCin = this.sanitizeString(cin);
 
-        // 4. Move File in MinIO
+            const userFolder = `${safeLastName}_${safeFirstName}_${safeCin}`;
+            const newFilename = `${this.sanitizeString(document.originalName)}`;
+
+            newPath = `${userFolder}/${safeDepartment}/${safeDocType}/${newFilename}`;
+        } else {
+            // SCENARIO B: CIN Missing (B4.2 Structure)
+            // Format: Department/Type_LastName_FirstName.pdf
+            const safeLastName = lastName ? this.sanitizeString(lastName) : 'Unknown';
+            const safeFirstName = firstName ? this.sanitizeString(firstName) : 'User';
+
+            // Construct filename: Type_Nom_Prenom.pdf
+            const fileExt = document.originalName.split('.').pop() || 'pdf';
+            const newFilename = `${safeDocType}_${safeLastName}_${safeFirstName}.${fileExt}`;
+
+            newPath = `${safeDepartment}/${newFilename}`;
+        }
+
+        // Move File in MinIO
         try {
             await this.minioService.moveFile(document.minioPath, newPath);
 
-            // 5. Update Database
+            // Update Database
             document.minioPath = newPath;
             await document.save();
         } catch (error) {
