@@ -1,0 +1,43 @@
+### Test User Registration
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "email": "admin@digiarch.com",
+  "password": "Admin123!",
+  "role": "admin"
+}
+
+###
+
+### Test User Registration - Archive Manager
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "email": "manager@digiarch.com",
+  "password": "Manager123!",
+  "role": "archive_manager"
+}
+
+###
+
+### Test User Login
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@digiarch.com",
+  "password": "Admin123!"
+}
+
+###
+
+### Test User Login - Archive Manager
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "manager@digiarch.com",
+  "password": "Manager123!"
+}
