@@ -67,23 +67,44 @@ Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
 
 ###
 
-### Update User Password (Admin Only)
-PUT http://localhost:3000/users/USER_ID_HERE
-Content-Type: application/json
-Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
-
-{
-  "password": "NewPassword123!"
-}
-
-###
-
 ### Delete User (Admin Only)
 DELETE http://localhost:3000/users/USER_ID_HERE
 Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
 
 ###
 
-### Test Access Control - Try to access as Archive Manager (Should Fail)
-GET http://localhost:3000/users
-Authorization: Bearer YOUR_MANAGER_TOKEN_HERE
+### Upload PDF Document (Archive Manager or Admin)
+POST http://localhost:3000/documents/upload
+Authorization: Bearer YOUR_TOKEN_HERE
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="file"; filename="document.pdf"
+Content-Type: application/pdf
+
+< ./path/to/your/document.pdf
+------WebKitFormBoundary--
+
+###
+
+### Get All Documents
+GET http://localhost:3000/documents
+Authorization: Bearer YOUR_TOKEN_HERE
+
+###
+
+### Get Document By ID
+GET http://localhost:3000/documents/DOCUMENT_ID_HERE
+Authorization: Bearer YOUR_TOKEN_HERE
+
+###
+
+### Get Document Download URL
+GET http://localhost:3000/documents/DOCUMENT_ID_HERE/url
+Authorization: Bearer YOUR_TOKEN_HERE
+
+###
+
+### Delete Document (Admin Only)
+DELETE http://localhost:3000/documents/DOCUMENT_ID_HERE
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
