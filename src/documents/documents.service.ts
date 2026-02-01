@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { DocumentFile } from './document.schema';
 import { MinioService } from './minio.service';
 import { AiService } from './ai.service';
+import { UpdateDocumentMetadataDto } from './dto/update-document-metadata.dto';
 
 @Injectable()
 export class DocumentsService {
@@ -28,6 +29,26 @@ export class DocumentsService {
         });
 
         this.analyzeDocumentAsync(document._id.toString(), file.buffer);
+
+        return document;
+    }
+
+    async updateDocumentMetadata(id: string, updateDto: UpdateDocumentMetadataDto) {
+        const document = await this.findById(id);
+
+        if (!document.extractedData) {
+            document.extractedData = {} as any;
+        }
+
+        // Merge updates
+        document.extractedData = {
+            ...document.extractedData,
+            ...updateDto
+        };
+
+        
+
+        await this.structureDocument(document);
 
         return document;
     }
@@ -94,19 +115,51 @@ export class DocumentsService {
         const basePath = newPath.substring(0, extensionIndex);
         const extension = newPath.substring(extensionIndex);
 
-        while (await this.minioService.fileExists(newPath)) {
-            newPath = `${basePath}_v${version}${extension}`;
-            version++;
+        
+
+        if (newPath !== document.minioPath) {
+            while (await this.minioService.fileExists(newPath)) {
+                newPath = `${basePath}_v${version}${extension}`;
+                version++;
+            }
         }
 
         try {
-            await this.minioService.moveFile(document.minioPath, newPath);
+            if (newPath !== document.minioPath) {
+                await this.minioService.moveFile(document.minioPath, newPath);
 
-            document.minioPath = newPath;
+                const oldJsonPath = document.minioPath.replace('.pdf', '.json');
+                if (await this.minioService.fileExists(oldJsonPath)) {
+                    await this.minioService.deleteFile(oldJsonPath);
+                }
+
+                document.minioPath = newPath;
+            }
+
+            const currentJsonPath = document.minioPath.replace('.pdf', '.json');
+            const metadata = this.generateMetadataJson(document);
+            const buffer = Buffer.from(JSON.stringify(metadata, null, 2));
+
+            await this.minioService.saveFile(currentJsonPath, buffer, 'application/json');
+
             await document.save();
         } catch (error) {
-            console.error(`Failed to move file from ${document.minioPath} to ${newPath}:`, error);
+            console.error(`Failed to restructure file:`, error);
         }
+    }
+
+    private generateMetadataJson(document: DocumentFile): any {
+        return {
+            id: document._id,
+            originalName: document.originalName,
+            uploadDate: document.uploadDate,
+            uploadedBy: document.uploadedBy,
+            extractedData: document.extractedData,
+            signatureDetected: document.signatureDetected,
+            analysisStatus: document.analysisStatus,
+            structureVersion: "1.0",
+            lastModified: new Date()
+        };
     }
 
     private sanitizeString(str: string): string {
@@ -133,6 +186,12 @@ export class DocumentsService {
     async deleteDocument(id: string) {
         const document = await this.findById(id);
         await this.minioService.deleteFile(document.minioPath);
+
+        const jsonPath = document.minioPath.replace('.pdf', '.json');
+        if (await this.minioService.fileExists(jsonPath)) {
+            await this.minioService.deleteFile(jsonPath);
+        }
+
         await this.documentModel.findByIdAndDelete(id);
         return { message: 'Document deleted successfully' };
     }

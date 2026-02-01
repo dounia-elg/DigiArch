@@ -9,10 +9,13 @@ import {
     UploadedFile,
     BadRequestException,
     Request,
+    Patch,
+    Body,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { DocumentsService } from './documents.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { UpdateDocumentMetadataDto } from './dto/update-document-metadata.dto';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/user.schema';
@@ -59,6 +62,15 @@ export class DocumentsController {
     async getFileUrl(@Param('id') id: string) {
         const url = await this.documentsService.getFileUrl(id);
         return { url };
+    }
+
+    @Patch(':id')
+    @Roles(UserRole.ADMIN, UserRole.ARCHIVE_MANAGER)
+    async updateMetadata(
+        @Param('id') id: string,
+        @Body() updateDto: UpdateDocumentMetadataDto,
+    ) {
+        return this.documentsService.updateDocumentMetadata(id, updateDto);
     }
 
     @Delete(':id')
