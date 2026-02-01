@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { LayoutDashboard, Files, Upload, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { authService } from '@/services/auth.service';
 
 const sidebarItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
@@ -17,7 +16,6 @@ const sidebarItems = [
 export const Sidebar = () => {
     const pathname = usePathname();
 
-    // Hide Sidebar on login/register pages
     if (pathname === '/login' || pathname === '/register') return null;
 
     return (

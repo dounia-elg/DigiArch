@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { FileText, LogOut, User } from 'lucide-react';
+import { FileText, LogOut } from 'lucide-react';
 import { authService } from '@/services/auth.service';
 
 export const Navbar = () => {
@@ -21,7 +21,6 @@ export const Navbar = () => {
         router.push('/login');
     };
 
-    // Hide Navbar on login/register pages
     if (pathname === '/login' || pathname === '/register') return null;
 
     return (
