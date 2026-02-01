@@ -34,6 +34,17 @@ export const documentsService = {
         await api.delete(`/documents/${id}`);
     },
 
+    async uploadDocument(file: File): Promise<Document> {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await api.post<Document>('/documents/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data;
+    },
+
     async getFileUrl(id: string): Promise<string> {
         const response = await api.get<{ url: string }>(`/documents/${id}/url`);
         return response.data.url;
