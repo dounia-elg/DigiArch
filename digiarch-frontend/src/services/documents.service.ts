@@ -34,6 +34,11 @@ export const documentsService = {
         await api.delete(`/documents/${id}`);
     },
 
+    async updateMetadata(id: string, metadata: any): Promise<Document> {
+        const response = await api.patch<Document>(`/documents/${id}`, metadata);
+        return response.data;
+    },
+
     async uploadDocument(file: File): Promise<Document> {
         const formData = new FormData();
         formData.append('file', file);
