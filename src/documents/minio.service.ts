@@ -70,7 +70,18 @@ export class MinioService implements OnModuleInit {
         }
     }
 
+    async saveFile(objectName: string, buffer: Buffer, mimetype: string): Promise<void> {
+        await this.minioClient.putObject(
+            this.bucketName,
+            objectName,
+            buffer,
+            buffer.length,
+            { 'Content-Type': mimetype }
+        );
+    }
+
     async copyFile(sourcePath: string, destPath: string): Promise<void> {
+
         const conds = new Minio.CopyConditions();
         await this.minioClient.copyObject(this.bucketName, destPath, `/${this.bucketName}/${sourcePath}`, conds);
     }

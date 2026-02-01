@@ -102,11 +102,36 @@ export class DocumentsService {
         try {
             await this.minioService.moveFile(document.minioPath, newPath);
 
+            const oldJsonPath = document.minioPath.replace('.pdf', '.json');
+            const newJsonPath = newPath.replace('.pdf', '.json');
+
+            const metadata = this.generateMetadataJson(document);
+            const buffer = Buffer.from(JSON.stringify(metadata, null, 2));
+
+            await this.minioService.saveFile(newJsonPath, buffer, 'application/json');
+
+            if (await this.minioService.fileExists(oldJsonPath)) {
+                await this.minioService.deleteFile(oldJsonPath);
+            }
+
             document.minioPath = newPath;
             await document.save();
         } catch (error) {
             console.error(`Failed to move file from ${document.minioPath} to ${newPath}:`, error);
         }
+    }
+
+    private generateMetadataJson(document: DocumentFile): any {
+        return {
+            id: document._id,
+            originalName: document.originalName,
+            uploadDate: document.uploadDate,
+            uploadedBy: document.uploadedBy,
+            extractedData: document.extractedData,
+            signatureDetected: document.signatureDetected,
+            analysisStatus: document.analysisStatus,
+            structureVersion: "1.0"
+        };
     }
 
     private sanitizeString(str: string): string {
