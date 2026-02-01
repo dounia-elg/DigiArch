@@ -1,0 +1,110 @@
+### Test User Registration
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "email": "admin@digiarch.com",
+  "password": "Admin123!",
+  "role": "admin"
+}
+
+###
+
+### Test User Registration - Archive Manager
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "email": "manager@digiarch.com",
+  "password": "Manager123!",
+  "role": "archive_manager"
+}
+
+###
+
+### Test User Login - Admin
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@digiarch.com",
+  "password": "Admin123!"
+}
+
+###
+
+### Test User Login - Archive Manager
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "manager@digiarch.com",
+  "password": "Manager123!"
+}
+
+###
+
+### Get All Users (Admin Only)
+GET http://localhost:3000/users
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+###
+
+### Get User By ID (Admin Only)
+GET http://localhost:3000/users/USER_ID_HERE
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+###
+
+### Update User (Admin Only)
+PUT http://localhost:3000/users/USER_ID_HERE
+Content-Type: application/json
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+{
+  "role": "archive_manager"
+}
+
+###
+
+### Delete User (Admin Only)
+DELETE http://localhost:3000/users/USER_ID_HERE
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
+
+###
+
+### Upload PDF Document (Archive Manager or Admin)
+POST http://localhost:3000/documents/upload
+Authorization: Bearer YOUR_TOKEN_HERE
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="file"; filename="document.pdf"
+Content-Type: application/pdf
+
+< ./path/to/your/document.pdf
+------WebKitFormBoundary--
+
+###
+
+### Get All Documents
+GET http://localhost:3000/documents
+Authorization: Bearer YOUR_TOKEN_HERE
+
+###
+
+### Get Document By ID
+GET http://localhost:3000/documents/DOCUMENT_ID_HERE
+Authorization: Bearer YOUR_TOKEN_HERE
+
+###
+
+### Get Document Download URL
+GET http://localhost:3000/documents/DOCUMENT_ID_HERE/url
+Authorization: Bearer YOUR_TOKEN_HERE
+
+###
+
+### Delete Document (Admin Only)
+DELETE http://localhost:3000/documents/DOCUMENT_ID_HERE
+Authorization: Bearer YOUR_ADMIN_TOKEN_HERE
