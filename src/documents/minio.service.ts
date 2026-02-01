@@ -60,6 +60,16 @@ export class MinioService implements OnModuleInit {
         return await this.minioClient.presignedGetObject(this.bucketName, objectName, 24 * 60 * 60);
     }
 
+    async fileExists(objectName: string): Promise<boolean> {
+        try {
+            await this.minioClient.statObject(this.bucketName, objectName);
+            return true;
+        } catch (error) {
+            if (error.code === 'NotFound') return false;
+            throw error;
+        }
+    }
+
     async copyFile(sourcePath: string, destPath: string): Promise<void> {
         const conds = new Minio.CopyConditions();
         await this.minioClient.copyObject(this.bucketName, destPath, `/${this.bucketName}/${sourcePath}`, conds);

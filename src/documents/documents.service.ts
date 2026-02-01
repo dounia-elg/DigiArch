@@ -94,6 +94,17 @@ export class DocumentsService {
             newPath = `${safeDepartment}/${newFilename}`;
         }
 
+        // Handle Duplicates (B4.3)
+        let version = 1;
+        const extensionIndex = newPath.lastIndexOf('.');
+        const basePath = newPath.substring(0, extensionIndex);
+        const extension = newPath.substring(extensionIndex);
+
+        while (await this.minioService.fileExists(newPath)) {
+            newPath = `${basePath}_v${version}${extension}`;
+            version++;
+        }
+
         // Move File in MinIO
         try {
             await this.minioService.moveFile(document.minioPath, newPath);
