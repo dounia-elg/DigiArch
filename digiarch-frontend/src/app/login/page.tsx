@@ -38,8 +38,12 @@ export default function LoginPage() {
         setIsLoading(true);
         setError(null);
         try {
-            await authService.login(data);
-            router.push('/dashboard');
+            const response = await authService.login(data);
+            if (response.user.role === 'ADMIN') {
+                router.push('/dashboard');
+            } else {
+                router.push('/dashboard');
+            }
         } catch (err: any) {
             setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
         } finally {

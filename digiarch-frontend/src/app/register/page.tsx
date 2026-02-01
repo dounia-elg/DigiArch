@@ -19,6 +19,9 @@ const registerSchema = z.object({
     lastName: z.string().min(2, 'Last name must be at least 2 characters'),
     email: z.string().email('Invalid email address'),
     password: z.string().min(6, 'Password must be at least 6 characters'),
+    role: z.enum(['admin', 'archive_manager'], {
+        required_error: "Please select a role",
+    }),
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -34,6 +37,9 @@ export default function RegisterPage() {
         formState: { errors },
     } = useForm<RegisterFormValues>({
         resolver: zodResolver(registerSchema),
+        defaultValues: {
+            role: 'archive_manager'
+        }
     });
 
     const onSubmit = async (data: RegisterFormValues) => {
@@ -117,6 +123,20 @@ export default function RegisterPage() {
                             />
                             {errors.password && (
                                 <p className="text-xs text-destructive">{errors.password.message}</p>
+                            )}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="role">Role</Label>
+                            <select
+                                id="role"
+                                {...register('role')}
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                <option value="archive_manager">Archive Manager</option>
+                                <option value="admin">Administrator</option>
+                            </select>
+                            {errors.role && (
+                                <p className="text-xs text-destructive">{errors.role.message}</p>
                             )}
                         </div>
                     </CardContent>
