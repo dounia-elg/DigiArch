@@ -1,8 +1,11 @@
+"use client";
+
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { LayoutDashboard, Files, Upload, Settings } from 'lucide-react';
-import { cn } from '@/lib/utils'; // utils should exist from shadcn init
+import { cn } from '@/lib/utils';
+import { authService } from '@/services/auth.service';
 
 const sidebarItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
@@ -12,26 +15,33 @@ const sidebarItems = [
 ];
 
 export const Sidebar = () => {
-    // We need to use usePathname in a client component?
-    // Start with static link for now, or make it 'use client' if needed.
-    // For layout components, usually better to be client if using hooks.
+    const pathname = usePathname();
+
+    // Hide Sidebar on login/register pages
+    if (pathname === '/login' || pathname === '/register') return null;
 
     return (
         <aside className="w-64 border-r bg-muted/20 min-h-[calc(100vh-4rem)] p-4">
             <div className="space-y-1">
-                {sidebarItems.map((item) => (
-                    <Button
-                        key={item.href}
-                        variant="ghost"
-                        className="w-full justify-start"
-                        asChild
-                    >
-                        <Link href={item.href}>
-                            <item.icon className="mr-2 h-4 w-4" />
-                            {item.label}
-                        </Link>
-                    </Button>
-                ))}
+                {sidebarItems.map((item) => {
+                    const isActive = pathname === item.href;
+                    return (
+                        <Button
+                            key={item.href}
+                            variant={isActive ? "secondary" : "ghost"}
+                            className={cn(
+                                "w-full justify-start",
+                                isActive && "bg-secondary font-medium"
+                            )}
+                            asChild
+                        >
+                            <Link href={item.href}>
+                                <item.icon className="mr-2 h-4 w-4" />
+                                {item.label}
+                            </Link>
+                        </Button>
+                    );
+                })}
             </div>
         </aside>
     );
