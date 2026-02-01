@@ -71,8 +71,6 @@ export class DocumentsService {
         const safeDocType = documentType ? this.sanitizeString(documentType) : 'Uncategorized';
 
         if (cin) {
-            // SCENARIO A: CIN Present (Standard Structure)
-            // Format: LastName_FirstName_CIN/Department/Type/Filename
             const safeLastName = lastName ? this.sanitizeString(lastName) : 'Unknown';
             const safeFirstName = firstName ? this.sanitizeString(firstName) : 'User';
             const safeCin = this.sanitizeString(cin);
@@ -82,19 +80,15 @@ export class DocumentsService {
 
             newPath = `${userFolder}/${safeDepartment}/${safeDocType}/${newFilename}`;
         } else {
-            // SCENARIO B: CIN Missing (B4.2 Structure)
-            // Format: Department/Type_LastName_FirstName.pdf
             const safeLastName = lastName ? this.sanitizeString(lastName) : 'Unknown';
             const safeFirstName = firstName ? this.sanitizeString(firstName) : 'User';
 
-            // Construct filename: Type_Nom_Prenom.pdf
             const fileExt = document.originalName.split('.').pop() || 'pdf';
             const newFilename = `${safeDocType}_${safeLastName}_${safeFirstName}.${fileExt}`;
 
             newPath = `${safeDepartment}/${newFilename}`;
         }
 
-        // Handle Duplicates (B4.3)
         let version = 1;
         const extensionIndex = newPath.lastIndexOf('.');
         const basePath = newPath.substring(0, extensionIndex);
@@ -105,11 +99,9 @@ export class DocumentsService {
             version++;
         }
 
-        // Move File in MinIO
         try {
             await this.minioService.moveFile(document.minioPath, newPath);
 
-            // Update Database
             document.minioPath = newPath;
             await document.save();
         } catch (error) {
